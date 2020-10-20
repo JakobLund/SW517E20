@@ -1,6 +1,5 @@
 import argparse
 import codecs
-from knox_source_data_io.models.publication import *
 from knox_source_data_io.models import *
 from initial_ocr.teseract_module import TesseractModule
 
@@ -16,12 +15,13 @@ if __name__ == '__main__':
     parser.add_argument('--tesseract-path', dest="tesseract_path", default=None,
                         help='If tesseract is not in PATH, you can define tesseracts location here.')
 
-    parser.add_argument('-lan','--language', dest="language", default="dan",
+    parser.add_argument('-lan', '--language', dest="language", default="dan",
                         help='If other language than "dan" is to be used, define here.')
 
     args = parser.parse_args()
     tesseract_module = TesseractModule()
-    article = tesseract_module.run_tesseract_on_image(args.path, language=args.language, tesseract_path=args.tesseract_path)
+    article = tesseract_module.run_tesseract_on_image(args.path, language=args.language,
+                                                      tesseract_path=args.tesseract_path)
 
     publication = Publication()  # todo io stuff is sketchy atm
     publication.articles = [article]
