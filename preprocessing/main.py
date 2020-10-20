@@ -11,38 +11,114 @@ class Preprocessing:
     def __init__(self):
         pass
 
-    def do_preprocessing(self, image_path, value, c):
-
+    def do_preprocessing_gauss(self, image_path, value, c):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = self.__thresholding(image, value, c)
-        image = self.__remove_noise(image)
-        image = self.__deskew(image)
-        #image = self.__canny(image)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
         image = self.__convert_to_pil(image)
 
         return image
 
+    def do_preprocessing_mean(self, image_path, value, c):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__convert_to_pil(image)
 
+        return image
+
+    def do_preprocessing_noise(self, image_path, value):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+        image = self.__get_grayscale(imagecv2)
+        image = self.__remove_noise(image, value)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_noise_gauss(self, image_path, value, c, noise_value):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+        image = self.__get_grayscale(imagecv2)
+        image = self.__remove_noise(image, noise_value)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_gauss_noise(self, image_path, value, c, noise_value):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__remove_noise(image, noise_value)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_noise_mean(self, image_path, value, c, noise_value):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+        image = self.__get_grayscale(imagecv2)
+        image = self.__remove_noise(image, noise_value)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_mean_noise(self, image_path, value, c, noise_value):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__remove_noise(image, noise_value)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_noise_gauss(self, image_path, value, c, noise_value):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+        image = self.__get_grayscale(imagecv2)
+        image = self.__remove_noise(image, noise_value)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__convert_to_pil(image)
+
+        return image
 
     @staticmethod
     def __get_grayscale(image):
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     @staticmethod
-    def __remove_noise(image):
-        return cv2.medianBlur(image, 5)
+    def __remove_noise(image, c):
+        return cv2.medianBlur(image, c)
 
     # thresholding
     @staticmethod
     def __thresholding(image, value, c):
         return cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, value, c)
-        #return  cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-        #return cv2.threshold(image, 185, 255, cv2.THRESH_BINARY)[1]
+        # return cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
+        # return cv2.threshold(image, c, 255, cv2.THRESH_BINARY)[1]
 
     # dilation
     @staticmethod
