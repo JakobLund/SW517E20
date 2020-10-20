@@ -166,7 +166,6 @@ class Preprocessing:
         :param path: The path of the file
         :return: The file in RGB format
         """
-        #image = Image.open("1988.jp2").convert("L")
         image_cv2 = cv2.imread(path)
         return image_cv2
 
