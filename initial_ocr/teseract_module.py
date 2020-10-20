@@ -1,6 +1,7 @@
 import pytesseract
 from PIL import Image
-from knox_source_data_io.models.publication import *
+from initial_ocr.publication import *
+
 
 class TesseractModule:
     confidence_index = 0
@@ -16,16 +17,15 @@ class TesseractModule:
         if tesseract_path is not None:
             pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
-
         arr_all_data = pytesseract.image_to_data(image, lang=language)
         data_matrix = self.__tess_output_str_to_matrix(arr_all_data)
         data_matrix = self.__save_conf_and_text(data_matrix)
         data_matrix = self.__remove_hyphens(data_matrix)
-        data_matrix = self.__merge_matrix_into_paragraphs(data_matrix)
+        #data_matrix = self.__merge_matrix_into_paragraphs(data_matrix)
 
-        self.debug_prints(data_matrix)
+        # self.debug_prints(data_matrix)
         # return data_matrix
-        return self.__convert_matrix_to_article(data_matrix, file_path)
+        return self.__get_average_conf_from_matrix(data_matrix)
 
     def __convert_matrix_to_article(self, paragraph_matrix, file_path):
         """ Converts the output matrix (List of paragraphs) into an article
@@ -172,6 +172,9 @@ class TesseractModule:
         length = len(data_matrix)
         num = 0
 
+        if length == 0:
+            return 0
+
         for index in range(length):
             temp_num = int(data_matrix[index][self.confidence_index])
             if 0 <= temp_num <= 100:
@@ -181,3 +184,4 @@ class TesseractModule:
     def debug_prints(self, data_matrix):
         self.__print_text_from_matrix(data_matrix)
         average_conf = self.__get_average_conf_from_matrix(data_matrix)
+        print(average_conf)

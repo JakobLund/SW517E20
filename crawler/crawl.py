@@ -2,17 +2,15 @@ import codecs
 import configparser
 import os
 import re
-import json
 from datetime import datetime
-from os import path
 from xml.dom import minidom
 
+from knox_source_data_io.io_handler import *
+from xlwt import Workbook
+
+from crawler.publication import *
 from initial_ocr.teseract_module import TesseractModule
 from nitf_parser.parser import NitfParser
-from knox_source_data_io.models.publication import *
-from knox_source_data_io.IOHandler import *
-from knox_source_data_io.models import *
-
 from preprocessing.main import Preprocessing
 
 
@@ -41,17 +39,38 @@ class Crawler:
         # loops through all the folders in the path and their respective files.
         for folder in folders:
             files = self.__find_relevant_files_in_directory(folder['path'])
+            # Workbook is created
+            wb = Workbook()
+            # add_sheet is used to create sheet.
+            sheet1 = wb.add_sheet('Sheet 1')
+            sheet1.write(0, 0, "Result")
+            sheet1.write(1, 0, "Udsnit")
+            sheet1.write(2, 0, "'2005'")
+            sheet1.write(4, 0, "Methods")
+            i = 0
             for file in files:
                 # checks if it is a .jp2 file. if true, the ocr is called
                 if ".jp2" in file:
                     preprocesser = Preprocessing()
-                    preprocesser_image = preprocesser.do_preprocessing(file)
-                    publication.add_article(self.tesseract_module.run_tesseract_on_image(preprocesser_image, file, "dan"))
+                    value = 3
+                    while value <= 19:
+                        c = 1
+                        while c <= 10:
+                            preprocesser_image = preprocesser.do_preprocessing(file, value, c)
+                            sheet1.write(i, c + value - 3, self.tesseract_module.run_tesseract_on_image(preprocesser_image, file))
+                            if i == 0:
+                                sheet1.write(4, c + value - 3, "Grayscale")
+                                sheet1.write(5, c + value - 3, "Thresholding:" + str(value) + ", " + str(c))
+                                sheet1.write(6, c + value - 3, "Noise")
+                                sheet1.write(7, c + value - 3, "Deskew")
+                            c += 1
+                        value += 2
+                    i += 1
                 # checks if it is a .xml file. if true, the parser for .nitf parser is called
                 if ".xml" in file:
                     print(f"Parsing {file}...")
                     publication.add_article(self.nitf_parser.parse(file))
-
+            wb.save('xlwt mean.xls')
         self.__save_to_json(publication)
 
     def __manage_folder_cache(self, arg_object):
@@ -163,12 +182,13 @@ class Crawler:
 
     @staticmethod
     def __save_to_json(publication):
-        handler = IOHandler(Generator(app="This app", version=1.0, generated_at=datetime.now().isoformat()), "http://iptc.org/std/NITF/2006-10-18/")
+        handler = IOHandler(Generator(app="This app", version=1.0, generated_at=datetime.now().isoformat()),
+                            "http://iptc.org/std/NITF/2006-10-18/")
         dirname = os.path.dirname(__file__)
         filename = os.path.join(dirname, 'output.json')
 
         with open(filename, 'w') as outfile:
-            handler.write_json(publication, outfile, filename)
+            handler.write_json(publication, outfile)
 
     @staticmethod
     def __load_from_json(filename):
@@ -255,4 +275,3 @@ class Crawler:
         """
         with codecs.open(file_name, 'w', encoding="utf-8") as outfile:
             json.dump(folders, outfile, indent=4, ensure_ascii=False)  # 4 is standard indent
-

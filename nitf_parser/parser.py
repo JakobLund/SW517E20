@@ -1,7 +1,7 @@
 from datetime import datetime
 from xml.dom import minidom
 import configparser
-from knox_source_data_io.models.publication import *
+from nitf_parser.publication import *
 
 
 class NitfParser:
