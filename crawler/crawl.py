@@ -52,16 +52,16 @@ class Crawler:
 
             for sheet in sheets:
                 sheet.write(0, 0, "Result")
-                sheet.write(1, 0, "Udsnit")
-                sheet.write(2, 0, "'2005'")
-                sheet.write(3, 0, "Average")
-                sheet.write(5, 0, "Methods")
+                sheet.write(0, 1, "Udsnit")
+                sheet.write(0, 2, "'2005'")
+                sheet.write(0, 3, "Average")
+                sheet.write(0, 5, "Methods")
 
             i = 0
             for file in files:
                 # checks if it is a .jp2 file. if true, the ocr is called
                 if ".jp2" in file:
-                    wb = self.__testing_data(wb, file, i)
+                    wb = self.__testing_data_v2(wb, file, i)
                 # checks if it is a .xml file. if true, the parser for .nitf parser is called
                 if ".xml" in file:
                     print(f"Parsing {file}...")
@@ -82,8 +82,8 @@ class Crawler:
             while c <= 10:
                 gauss_image = preprocesser.do_preprocessing_gauss(file, value, c)
                 mean_image = preprocesser.do_preprocessing_mean(file, value, c)
-                wb.get_sheet(0).write(i, col, self.tesseract_module.run_tesseract_on_image(gauss_image, file))
-                wb.get_sheet(1).write(i, col, self.tesseract_module.run_tesseract_on_image(mean_image, file))
+                wb.get_sheet(0).write(col, i, self.tesseract_module.run_tesseract_on_image(gauss_image, file))
+                wb.get_sheet(1).write(col, i, self.tesseract_module.run_tesseract_on_image(mean_image, file))
 
                 noise_value = 1
                 while noise_value < 10:
@@ -92,43 +92,68 @@ class Crawler:
                     noise_gauss_image = preprocesser.do_preprocessing_noise_gauss(file, value, c, noise_value)
                     noise_mean_image = preprocesser.do_preprocessing_noise_mean(file, value, c, noise_value)
 
-                    wb.get_sheet(3).write(i, noise_col, self.tesseract_module.run_tesseract_on_image(gauss_noise_image, file))
-                    wb.get_sheet(4).write(i, noise_col, self.tesseract_module.run_tesseract_on_image(mean_noise_image, file))
-                    wb.get_sheet(5).write(i, noise_col, self.tesseract_module.run_tesseract_on_image(noise_gauss_image, file))
-                    wb.get_sheet(6).write(i, noise_col, self.tesseract_module.run_tesseract_on_image(noise_mean_image, file))
+                    wb.get_sheet(3).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(gauss_noise_image, file))
+                    wb.get_sheet(4).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(mean_noise_image, file))
+                    wb.get_sheet(5).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(noise_gauss_image, file))
+                    wb.get_sheet(6).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(noise_mean_image, file))
 
                     if value == 3 and c == 1:
                         noise_image = preprocesser.do_preprocessing_noise(file, noise_value)
-                        wb.get_sheet(2).write(i, noise_col, self.tesseract_module.run_tesseract_on_image(noise_image, file))
+                        wb.get_sheet(2).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(noise_image, file))
                         if i == 0:
-                            wb.get_sheet(2).write(5, noise_col, "Grayscale")
-                            wb.get_sheet(2).write(6, noise_col, "Noise: " + str(noise_value))
+                            wb.get_sheet(2).write(noise_col, 5, "Grayscale")
+                            wb.get_sheet(2).write(noise_col, 6, "Noise: " + str(noise_value))
                     if i == 0:
-                        wb.get_sheet(3).write(5, noise_col, "Grayscale")
-                        wb.get_sheet(3).write(6, noise_col, "Gauss: " + str(value) + ", " + str(c))
-                        wb.get_sheet(3).write(7, noise_col, "Noise: " + str(noise_value))
+                        wb.get_sheet(3).write(noise_col, 5, "Grayscale")
+                        wb.get_sheet(3).write(noise_col, 6, "Gauss: " + str(value) + ", " + str(c))
+                        wb.get_sheet(3).write(noise_col, 7, "Noise: " + str(noise_value))
 
-                        wb.get_sheet(4).write(5, noise_col, "Grayscale")
-                        wb.get_sheet(4).write(6, noise_col, "Mean: " + str(value) + ", " + str(c))
-                        wb.get_sheet(4).write(7, noise_col, "Noise: " + str(noise_value))
+                        wb.get_sheet(4).write(noise_col, 5, "Grayscale")
+                        wb.get_sheet(4).write(noise_col, 6, "Mean: " + str(value) + ", " + str(c))
+                        wb.get_sheet(4).write(noise_col, 7, "Noise: " + str(noise_value))
 
-                        wb.get_sheet(5).write(5, noise_col, "Grayscale")
-                        wb.get_sheet(5).write(6, noise_col, "Noise: " + str(noise_value))
-                        wb.get_sheet(5).write(7, noise_col, "Gauss: " + str(value) + ", " + str(c))
+                        wb.get_sheet(5).write(noise_col, 5, "Grayscale")
+                        wb.get_sheet(5).write(noise_col, 6, "Noise: " + str(noise_value))
+                        wb.get_sheet(5).write(noise_col, 7, "Gauss: " + str(value) + ", " + str(c))
 
-                        wb.get_sheet(6).write(5, noise_col, "Grayscale")
-                        wb.get_sheet(6).write(6, noise_col, "Noise: " + str(noise_value))
-                        wb.get_sheet(6).write(7, noise_col, "Mean:  " + str(value) + ", " + str(c))
+                        wb.get_sheet(6).write(noise_col, 5, "Grayscale")
+                        wb.get_sheet(6).write(noise_col, 6, "Noise: " + str(noise_value))
+                        wb.get_sheet(6).write(noise_col, 7, "Mean:  " + str(value) + ", " + str(c))
                     noise_value += 2
                     noise_col += 1
                 if i == 0:
-                    wb.get_sheet(0).write(5, col, "Grayscale")
-                    wb.get_sheet(0).write(6, col, "Gauss: " + str(value) + ", " + str(c))
+                    wb.get_sheet(0).write(col, 5, "Grayscale")
+                    wb.get_sheet(0).write(col, 6, "Gauss: " + str(value) + ", " + str(c))
 
-                    wb.get_sheet(1).write(5, col, "Grayscale")
-                    wb.get_sheet(1).write(6, col, "Mean: " + str(value) + ", " + str(c))
+                    wb.get_sheet(1).write(col, 5, "Grayscale")
+                    wb.get_sheet(1).write(col, 6, "Mean: " + str(value) + ", " + str(c))
                 c += 1
                 col += 1
+            value += 2
+        return wb
+
+    def __testing_data_v2(self, wb, file, i):
+        preprocesser = Preprocessing()
+
+        value = 3
+        noise_col = 1
+
+        while value <= 19:
+            c = 1
+            while c <= 10:
+                noise_value = 1
+                while noise_value < 10:
+                    noise_gauss_image = preprocesser.do_preprocessing_noise_gauss(file, value, c, noise_value)
+
+                    wb.get_sheet(5).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(noise_gauss_image, file))
+
+                    if i == 0:
+                        wb.get_sheet(5).write(noise_col, 5, "Grayscale")
+                        wb.get_sheet(5).write(noise_col, 6, "Noise: " + str(noise_value))
+                        wb.get_sheet(5).write(noise_col, 7, "Gauss: " + str(value) + ", " + str(c))
+                    noise_value += 2
+                    noise_col += 1
+                c += 1
             value += 2
         return wb
 

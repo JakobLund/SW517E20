@@ -100,7 +100,68 @@ class Preprocessing:
             raise Exception("The image was not found in the path: " + image_path)
         image = self.__get_grayscale(imagecv2)
         image = self.__remove_noise(image, noise_value)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, value, c)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSS_C, cv2.THRESH_BINARY, value, c)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_dilate(self, image_path, value, c):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_dilate(self, image_path, value, c):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 9)
+        image = self.__dilate(image, )
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_erode(self, image_path, value, c):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_opening(self, image_path, value, c):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_closing(self, image_path, value, c):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
         image = self.__convert_to_pil(image)
 
         return image
