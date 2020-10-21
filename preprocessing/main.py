@@ -23,6 +23,62 @@ class Preprocessing:
 
         return image
 
+    def do_preprocessing_mean_dilation(self, image_path, value, c):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
+        kernel = np.ones((value, value), np.uint8)
+        image = cv2.dilate(image, kernel, c)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_mean_erosion(self, image_path, value, c):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
+        kernel = np.ones((value, value), np.uint8)
+        image = cv2.erode(image, kernel, c)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_mean_opening(self, image_path, value):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
+        kernel = np.ones((value, value), np.uint8)
+        image = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_mean_closing(self, image_path, value):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
+        kernel = np.ones((value, value), np.uint8)
+        image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
+        image = self.__convert_to_pil(image)
+
+        return image
+
     def do_preprocessing_mean(self, image_path, value, c):
         try:
             imagecv2 = self.__load_file(image_path)
@@ -112,20 +168,9 @@ class Preprocessing:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
-        image = self.__convert_to_pil(image)
-
-        return image
-
-    def do_preprocessing_dilate(self, image_path, value, c):
-        try:
-            imagecv2 = self.__load_file(image_path)
-        except FileNotFoundError:
-            raise Exception("The image was not found in the path: " + image_path)
-
-        image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 9)
-        image = self.__dilate(image, )
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
+        kernel = np.ones((value, value), np.uint8)
+        image = cv2.dilate(image, kernel, c)
         image = self.__convert_to_pil(image)
 
         return image
@@ -137,7 +182,9 @@ class Preprocessing:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
+        kernel = np.ones((value, value), np.uint8)
+        image = cv2.erode(image, kernel, c)
         image = self.__convert_to_pil(image)
 
         return image
