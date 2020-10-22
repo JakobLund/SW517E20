@@ -11,6 +11,40 @@ class Preprocessing:
     def __init__(self):
         pass
 
+    def do_preprocessing_deskew(self, image_path):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = self.__deskew(image)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_no_preprocessing(self, image_path):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing(self, image_path, name):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 13, 10)
+        cv2.imwrite(name, image)
+        return image
+
     def do_preprocessing_gauss(self, image_path, value, c):
         try:
             imagecv2 = self.__load_file(image_path)
@@ -23,58 +57,54 @@ class Preprocessing:
 
         return image
 
-    def do_preprocessing_mean_dilation(self, image_path, value, c):
+    def do_preprocessing_mean_dilation(self, image_path, kernel_value, iteration_value):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
-        kernel = np.ones((value, value), np.uint8)
-        image = cv2.dilate(image, kernel, c)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 13, 10)
+        image = self.__dilate(image, kernel_value, iteration_value)
         image = self.__convert_to_pil(image)
 
         return image
 
-    def do_preprocessing_mean_erosion(self, image_path, value, c):
+    def do_preprocessing_mean_erosion(self, image_path, kernel_value, iteration_value):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
-        kernel = np.ones((value, value), np.uint8)
-        image = cv2.erode(image, kernel, c)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 13, 10)
+        image = self.__erode(image, kernel_value, iteration_value)
         image = self.__convert_to_pil(image)
 
         return image
 
-    def do_preprocessing_mean_opening(self, image_path, value):
+    def do_preprocessing_mean_opening(self, image_path, kernel_value, iteration_value):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
-        kernel = np.ones((value, value), np.uint8)
-        image = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 13, 10)
+        image = self.__opening(image, kernel_value, iteration_value)
         image = self.__convert_to_pil(image)
 
         return image
 
-    def do_preprocessing_mean_closing(self, image_path, value):
+    def do_preprocessing_mean_closing(self, image_path, kernel_value, iteration_value):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
-        kernel = np.ones((value, value), np.uint8)
-        image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 13, 10)
+        image = self.__closing(image, kernel_value, iteration_value)
         image = self.__convert_to_pil(image)
 
         return image
@@ -149,66 +179,98 @@ class Preprocessing:
 
         return image
 
-    def do_preprocessing_noise_gauss(self, image_path, value, c, noise_value):
+    def do_preprocessing_dilate(self, image_path, kernel_value, iteration_value):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
+
         image = self.__get_grayscale(imagecv2)
-        image = self.__remove_noise(image, noise_value)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSS_C, cv2.THRESH_BINARY, value, c)
+        image = self.__dilate(image, kernel_value, iteration_value)
         image = self.__convert_to_pil(image)
 
         return image
 
-    def do_preprocessing_dilate(self, image_path, value, c):
+    def do_preprocessing_erode(self, image_path, kernel_value, iteration_value):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
-        kernel = np.ones((value, value), np.uint8)
-        image = cv2.dilate(image, kernel, c)
+        image = self.__erode(image, kernel_value, iteration_value)
         image = self.__convert_to_pil(image)
 
         return image
 
-    def do_preprocessing_erode(self, image_path, value, c):
+    def do_preprocessing_opening(self, image_path, kernel_value, iteration_value):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 13, 10)
-        kernel = np.ones((value, value), np.uint8)
-        image = cv2.erode(image, kernel, c)
+        image = self.__opening(image, kernel_value, iteration_value)
         image = self.__convert_to_pil(image)
 
         return image
 
-    def do_preprocessing_opening(self, image_path, value, c):
+    def do_preprocessing_closing(self, image_path, kernel_value, iteration_value):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
+        image = self.__closing(image, kernel_value, iteration_value)
         image = self.__convert_to_pil(image)
 
         return image
 
-    def do_preprocessing_closing(self, image_path, value, c):
+    def do_preprocessing_median(self, image_path, kernel):
         try:
             imagecv2 = self.__load_file(image_path)
         except FileNotFoundError:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, value, c)
+        image = cv2.medianBlur(image, kernel)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_gauss_blur(self, image_path, kernel, sigma):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.GaussianBlur(image, (kernel, kernel), sigma)
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_averaging(self, image_path, kernel):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.blur(image, (kernel, kernel))
+        image = self.__convert_to_pil(image)
+
+        return image
+
+    def do_preprocessing_bilateral(self, image_path, d, sigma_color, sigma_space):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        image = cv2.bilateralFilter(image, d, sigma_color, sigma_space)
         image = self.__convert_to_pil(image)
 
         return image
@@ -230,21 +292,26 @@ class Preprocessing:
 
     # dilation
     @staticmethod
-    def __dilate(image):
-        kernel = np.ones((5, 5), np.uint8)
-        return cv2.dilate(image, kernel, iterations=1)
+    def __dilate(image, kernel_value, iteration_value):
+        kernel = np.ones((kernel_value, kernel_value), np.uint8)
+        return cv2.morphologyEx(image, cv2.MORPH_DILATE, kernel, iterations=iteration_value)
 
     # erosion
     @staticmethod
-    def __erode(image):
-        kernel = np.ones((5, 5), np.uint8)
-        return cv2.erode(image, kernel, iterations=1)
+    def __erode(image, kernel_value, iteration_value):
+        kernel = np.ones((kernel_value, kernel_value), np.uint8)
+        return cv2.erode(image, kernel, iterations=iteration_value)
 
     # opening - erosion followed by dilation
     @staticmethod
-    def __opening(image):
-        kernel = np.ones((5, 5), np.uint8)
-        return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+    def __opening(image, kernel_value, iteration_value):
+        kernel = np.ones((kernel_value, kernel_value), np.uint8)
+        return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel, iterations=iteration_value)
+
+    @staticmethod
+    def __closing(image, kernel_value, iteration_value):
+        kernel = np.ones((kernel_value, kernel_value), np.uint8)
+        return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel, iterations=iteration_value)
 
     # canny edge detection
     @staticmethod

@@ -39,151 +39,206 @@ class Crawler:
         # loops through all the folders in the path and their respective files.
         for folder in folders:
             files = self.__find_relevant_files_in_directory(folder['path'])
-            wb = Workbook()
-            dilation = wb.add_sheet('Dilation')
-            erosion = wb.add_sheet('Erosion')
-            opening = wb.add_sheet('Opening')
-            closing = wb.add_sheet('Closing')
-            mean_dilation = wb.add_sheet('MeanDilation')
-            mean_erosion = wb.add_sheet('MeanErosion')
-            mean_opening = wb.add_sheet('MeanOpening')
-            mean_closing = wb.add_sheet('MeanClosing')
+            self.blur(files)
 
-            sheets = [dilation, erosion, opening, closing, mean_dilation, mean_erosion, mean_opening, mean_closing]
+    def thresh(self, files):
+        wb = Workbook()
+        mean = wb.add_sheet('Mean')
+        gaussian = wb.add_sheet('Gaussian')
 
-            for sheet in sheets:
-                sheet.write(0, 0, "Result")
-                sheet.write(0, 1, "Udsnit")
-                sheet.write(0, 2, "'2005'")
-                sheet.write(0, 3, "Average")
-                sheet.write(0, 5, "Methods")
+        sheets = [mean, gaussian]
 
-            i = 0
-            for file in files:
-                # checks if it is a .jp2 file. if true, the ocr is called
-                if ".jp2" in file:
-                    wb = self.__testing_data_erosion_dilation_opening_closing(wb, file, i)
-                # checks if it is a .xml file. if true, the parser for .nitf parser is called
-                if ".xml" in file:
-                    print(f"Parsing {file}...")
-                    publication.add_article(self.nitf_parser.parse(file))
+        for sheet in sheets:
+            sheet.write(0, 0, "Methods")
+
+        i = 0
+        for file in files:
+            # checks if it is a .jp2 file. if true, the ocr is called
+            if ".jp2" in file:
+                wb = self.__testing_data_threshholding(wb, file, i)
+            i += 1
+        wb.save('thresholding.xls')
+
+    def blur(self, files):
+        wb = Workbook()
+        median = wb.add_sheet('Median')
+        gaussian = wb.add_sheet('Gaussian')
+        averaging = wb.add_sheet('Averaging')
+
+        sheets = [median, gaussian, averaging]
+
+        for sheet in sheets:
+            sheet.write(0, 0, "Methods")
+
+        i = 0
+        for file in files:
+            # checks if it is a .jp2 file. if true, the ocr is called
+            if ".jp2" in file:
+                wb = self.__testing_data_blur(wb, file, i)
+            i += 1
+        wb.save('blur_without_bilateral.xls')
+
+    def deskew(self, files):
+        wb = Workbook()
+        deskew = wb.add_sheet('Deskew')
+
+        deskew.write(0, 1, "With")
+        deskew.write(0, 2, "Without")
+
+        i = 1
+        for file in files:
+            # checks if it is a .jp2 file. if true, the ocr is called
+            if ".jp2" in file:
+                preprocessing = Preprocessing()
+                image = preprocessing.do_preprocessing_deskew(file)
+                original_image = preprocessing.do_no_preprocessing(file)
+                wb.get_sheet(1).write(i, 1, self.tesseract_module.run_tesseract_on_image(image, file))
+                wb.get_sheet(1).write(i, 2, self.tesseract_module.run_tesseract_on_image(original_image, file))
                 i += 1
-            wb.save('threshold noise.xls')
-        self.__save_to_json(publication)
+        wb.save('deskew.xls')
+
+    def __testing_data_bilateral_blur(self, wb, file, i):
+        preprocesser = Preprocessing()
+
+        d_value = 1
+        row = 1
+        while d_value <= 10:
+            sigma_color = 1
+            while sigma_color <= 200:
+                sigma_space = 1
+                while sigma_space <= 200:
+                    gaussian = preprocesser.do_preprocessing_bilateral(file, d_value, sigma_color, sigma_space)
+                    wb.get_sheet(1).write(row, i + 5, self.tesseract_module.run_tesseract_on_image(gaussian, file))
+
+                    if i == 0:
+                        wb.get_sheet(1).write(row, 0, "Grayscale")
+                        wb.get_sheet(1).write(row, 1, "Kernel: " + str(d_value))
+                        wb.get_sheet(1).write(row, 2, "Sigma color: " + str(sigma_color))
+                        wb.get_sheet(1).write(row, 3, "Sigma space: " + str(sigma_space))
+                    row += 1
+                    sigma_space += 20
+                sigma_color += 20
+            d_value += 1
+        return wb
+
+    def __testing_data_blur(self, wb, file, i):
+        preprocesser = Preprocessing()
+
+        kernel_value = 3
+        row = 1
+        gauss_row = 1
+        while kernel_value <= 11:
+            averaging = preprocesser.do_preprocessing_averaging(file, kernel_value)
+            median = preprocesser.do_preprocessing_median(file, kernel_value)
+            wb.get_sheet(0).write(row, i + 3, self.tesseract_module.run_tesseract_on_image(median, file))
+            wb.get_sheet(2).write(row, i + 3, self.tesseract_module.run_tesseract_on_image(averaging, file))
+
+            if i == 0:
+                wb.get_sheet(0).write(row, 0, "Grayscale")
+                wb.get_sheet(0).write(row, 1, "Kernel: " + str(kernel_value))
+
+                wb.get_sheet(2).write(row, 0, "Grayscale")
+                wb.get_sheet(2).write(row, 1, "Kernel: " + str(kernel_value))
+
+            sigma = 1
+            while sigma <= 10:
+                gaussian = preprocesser.do_preprocessing_gauss_blur(file, kernel_value, sigma)
+                wb.get_sheet(1).write(gauss_row, i + 4, self.tesseract_module.run_tesseract_on_image(gaussian, file))
+
+                if i == 0:
+                    wb.get_sheet(1).write(gauss_row, 0, "Grayscale")
+                    wb.get_sheet(1).write(gauss_row, 1, "Kernel: " + str(kernel_value))
+                    wb.get_sheet(1).write(gauss_row, 2, "Sigma: " + str(sigma))
+                sigma += 1
+                gauss_row += 1
+            row += 1
+            kernel_value += 2
+        return wb
 
     def __testing_data_erosion_dilation_opening_closing(self, wb, file, i):
         preprocesser = Preprocessing()
 
         kernel_value = 3
-        col = 1
-        noise_col = 1
+        row = 1
 
-        while kernel_value <= 3:
-            c = 1
-            while c <= 1:
-                dilate_image = preprocesser.do_preprocessing_dilate(file, kernel_value, c)
-                erode_image = preprocesser.do_preprocessing_erode(file, kernel_value, c)
-                opening_image = preprocesser.do_preprocessing_opening(file, kernel_value, c)
-                closing_image = preprocesser.do_preprocessing_closing(file, kernel_value, c)
-                wb.get_sheet(1).write(col, i, self.tesseract_module.run_tesseract_on_image(dilate_image, file))
-                wb.get_sheet(2).write(col, i, self.tesseract_module.run_tesseract_on_image(erode_image, file))
-                wb.get_sheet(3).write(col, i, self.tesseract_module.run_tesseract_on_image(opening_image, file))
-                wb.get_sheet(4).write(col, i, self.tesseract_module.run_tesseract_on_image(closing_image, file))
+        while kernel_value <= 19:
+            iteration_value = 1
+            while iteration_value <= 5:
+                dilate_image = preprocesser.do_preprocessing_dilate(file, kernel_value, iteration_value)
+                erode_image = preprocesser.do_preprocessing_erode(file, kernel_value, iteration_value)
+                opening_image = preprocesser.do_preprocessing_opening(file, kernel_value, iteration_value)
+                closing_image = preprocesser.do_preprocessing_closing(file, kernel_value, iteration_value)
+                wb.get_sheet(0).write(row, i + 4, self.tesseract_module.run_tesseract_on_image(dilate_image, file))
+                wb.get_sheet(1).write(row, i + 4, self.tesseract_module.run_tesseract_on_image(erode_image, file))
+                wb.get_sheet(2).write(row, i + 4, self.tesseract_module.run_tesseract_on_image(opening_image, file))
+                wb.get_sheet(3).write(row, i + 4, self.tesseract_module.run_tesseract_on_image(closing_image, file))
 
-
-                mean_dilate_image = preprocesser.do_preprocessing_mean_dilation(file, kernel_value, c)
-                mean_erosion_image = preprocesser.do_preprocessing_mean_erosion(file, kernel_value, c)
-                mean_opening_image = preprocesser.do_preprocessing_mean_opening(file, kernel_value)
-                mean_closing_image = preprocesser.do_preprocessing_mean_closing(file, kernel_value)
-
-                wb.get_sheet(3).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(mean_dilate_image, file))
-                wb.get_sheet(4).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(mean_erosion_image, file))
-                wb.get_sheet(4).write(noise_col, i,
-                                      self.tesseract_module.run_tesseract_on_image(mean_opening_image, file))
-                wb.get_sheet(4).write(noise_col, i,
-                                      self.tesseract_module.run_tesseract_on_image(mean_closing_image, file))
-
+                mean_dilate_image = preprocesser.do_preprocessing_mean_dilation(file, kernel_value, iteration_value)
+                mean_erosion_image = preprocesser.do_preprocessing_mean_erosion(file, kernel_value, iteration_value)
+                mean_opening_image = preprocesser.do_preprocessing_mean_opening(file, kernel_value, iteration_value)
+                mean_closing_image = preprocesser.do_preprocessing_mean_closing(file, kernel_value, iteration_value)
+                wb.get_sheet(4).write(row, i + 4, self.tesseract_module.run_tesseract_on_image(mean_dilate_image, file))
+                wb.get_sheet(5).write(row, i + 4, self.tesseract_module.run_tesseract_on_image(mean_erosion_image, file))
+                wb.get_sheet(6).write(row, i + 4, self.tesseract_module.run_tesseract_on_image(mean_opening_image, file))
+                wb.get_sheet(7).write(row, i + 4, self.tesseract_module.run_tesseract_on_image(mean_closing_image, file))
 
                 if i == 0:
-                    wb.get_sheet(3).write(noise_col, 5, "Grayscale")
-                    wb.get_sheet(3).write(noise_col, 6, "Kernel: " + str(kernel_value) + ", " + str(c))
-                    wb.get_sheet(3).write(noise_col, 7, "Dilation: " + str(c))
+                    wb.get_sheet(0).write(row, 0, "Grayscale")
+                    wb.get_sheet(0).write(row, 1, "Kernel: " + str(kernel_value))
+                    wb.get_sheet(0).write(row, 2, "Dilation iteration: " + str(iteration_value))
 
-                    wb.get_sheet(4).write(noise_col, 5, "Grayscale")
-                    wb.get_sheet(4).write(noise_col, 6, "Kernel: " + str(kernel_value) + ", " + str(c))
-                    wb.get_sheet(4).write(noise_col, 7, "Erosion: " + str(c))
+                    wb.get_sheet(1).write(row, 0, "Grayscale")
+                    wb.get_sheet(1).write(row, 1, "Kernel: " + str(kernel_value))
+                    wb.get_sheet(1).write(row, 2, "Erosion iteration: " + str(iteration_value))
 
-                    wb.get_sheet(5).write(noise_col, 5, "Grayscale")
-                    wb.get_sheet(5).write(noise_col, 6, "Kernel: " + str(kernel_value) + ", " + str(c))
-                    wb.get_sheet(5).write(noise_col, 7, "Opening: ")
+                    wb.get_sheet(2).write(row, 0, "Grayscale")
+                    wb.get_sheet(2).write(row, 1, "Kernel: " + str(kernel_value))
+                    wb.get_sheet(2).write(row, 2, "Opening iteration: " + str(iteration_value))
 
+                    wb.get_sheet(3).write(row, 0, "Grayscale")
+                    wb.get_sheet(3).write(row, 1, "Kernel:  " + str(kernel_value))
+                    wb.get_sheet(3).write(row, 2, "Closing iteration: " + str(iteration_value))
 
-                    wb.get_sheet(6).write(noise_col, 5, "Grayscale")
-                    wb.get_sheet(6).write(noise_col, 6, "Kernel:  " + str(kernel_value) + ", " + str(c))
-                    wb.get_sheet(6).write(noise_col, 7, "Closing: ")
-                noise_col += 1
-                c += 1
-                col += 1
+                    wb.get_sheet(4).write(row, 0, "Grayscale")
+                    wb.get_sheet(4).write(row, 1,  "Kernel:  " + str(kernel_value))
+                    wb.get_sheet(4).write(row, 2, "Dilation iteration: " + str(iteration_value))
+
+                    wb.get_sheet(5).write(row, 0, "Grayscale")
+                    wb.get_sheet(5).write(row, 1 , "Kernel:  " + str(kernel_value))
+                    wb.get_sheet(5).write(row, 2, "Erosion iteration: " + str(iteration_value))
+
+                    wb.get_sheet(6).write(row, 0, "Grayscale")
+                    wb.get_sheet(6).write(row, 1, "Kernel:  " + str(kernel_value))
+                    wb.get_sheet(6).write(row, 2, "Opening iteration: " + str(iteration_value))
+
+                    wb.get_sheet(7).write(row, 0, "Grayscale")
+                    wb.get_sheet(7).write(row, 1, "Kernel:  " + str(kernel_value))
+                    wb.get_sheet(7).write(row, 2, "Closing iteration: " + str(iteration_value))
+                iteration_value += 1
+                row += 1
             kernel_value += 2
         return wb
-
-    def __testing_data(self, wb, file, i):
+    
+    def __testing_data_threshholding(self, wb, file, i):
         preprocesser = Preprocessing()
 
         value = 3
         col = 1
-        noise_col = 1
 
         while value <= 19:
             c = 1
             while c <= 10:
                 gauss_image = preprocesser.do_preprocessing_gauss(file, value, c)
                 mean_image = preprocesser.do_preprocessing_mean(file, value, c)
-                wb.get_sheet(0).write(col, i, self.tesseract_module.run_tesseract_on_image(gauss_image, file))
-                wb.get_sheet(1).write(col, i, self.tesseract_module.run_tesseract_on_image(mean_image, file))
+                wb.get_sheet(0).write(col, i + 3, self.tesseract_module.run_tesseract_on_image(gauss_image, file))
+                wb.get_sheet(1).write(col, i + 3, self.tesseract_module.run_tesseract_on_image(mean_image, file))
 
-                noise_value = 1
-                while noise_value < 10:
-                    gauss_noise_image = preprocesser.do_preprocessing_gauss_noise(file, value, c, noise_value)
-                    mean_noise_image = preprocesser.do_preprocessing_mean_noise(file, value, c, noise_value)
-                    noise_gauss_image = preprocesser.do_preprocessing_noise_gauss(file, value, c, noise_value)
-                    noise_mean_image = preprocesser.do_preprocessing_noise_mean(file, value, c, noise_value)
-
-                    wb.get_sheet(3).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(gauss_noise_image, file))
-                    wb.get_sheet(4).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(mean_noise_image, file))
-                    wb.get_sheet(5).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(noise_gauss_image, file))
-                    wb.get_sheet(6).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(noise_mean_image, file))
-
-                    if value == 3 and c == 1:
-                        noise_image = preprocesser.do_preprocessing_noise(file, noise_value)
-                        wb.get_sheet(2).write(noise_col, i, self.tesseract_module.run_tesseract_on_image(noise_image, file))
-                        if i == 0:
-                            wb.get_sheet(2).write(noise_col, 5, "Grayscale")
-                            wb.get_sheet(2).write(noise_col, 6, "Noise: " + str(noise_value))
-                    if i == 0:
-                        wb.get_sheet(3).write(noise_col, 5, "Grayscale")
-                        wb.get_sheet(3).write(noise_col, 6, "Gauss: " + str(value) + ", " + str(c))
-                        wb.get_sheet(3).write(noise_col, 7, "Noise: " + str(noise_value))
-
-                        wb.get_sheet(4).write(noise_col, 5, "Grayscale")
-                        wb.get_sheet(4).write(noise_col, 6, "Mean: " + str(value) + ", " + str(c))
-                        wb.get_sheet(4).write(noise_col, 7, "Noise: " + str(noise_value))
-
-                        wb.get_sheet(5).write(noise_col, 5, "Grayscale")
-                        wb.get_sheet(5).write(noise_col, 6, "Noise: " + str(noise_value))
-                        wb.get_sheet(5).write(noise_col, 7, "Gauss: " + str(value) + ", " + str(c))
-
-                        wb.get_sheet(6).write(noise_col, 5, "Grayscale")
-                        wb.get_sheet(6).write(noise_col, 6, "Noise: " + str(noise_value))
-                        wb.get_sheet(6).write(noise_col, 7, "Mean:  " + str(value) + ", " + str(c))
-                    noise_value += 2
-                    noise_col += 1
                 if i == 0:
-                    wb.get_sheet(0).write(col, 5, "Grayscale")
-                    wb.get_sheet(0).write(col, 6, "Gauss: " + str(value) + ", " + str(c))
+                    wb.get_sheet(0).write(col, 0, "Grayscale")
+                    wb.get_sheet(0).write(col, 1, "Gauss: " + str(value) + ", " + str(c))
 
-                    wb.get_sheet(1).write(col, 5, "Grayscale")
-                    wb.get_sheet(1).write(col, 6, "Mean: " + str(value) + ", " + str(c))
+                    wb.get_sheet(1).write(col, 0, "Grayscale")
+                    wb.get_sheet(1).write(col, 1, "Mean: " + str(value) + ", " + str(c))
                 c += 1
                 col += 1
             value += 2
