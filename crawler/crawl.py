@@ -165,13 +165,13 @@ class Crawler:
                 sigma_space = 1
                 while sigma_space <= 200:
                     gaussian = preprocesser.do_preprocessing_bilateral(file, d_value, sigma_color, sigma_space)
-                    wb.get_sheet(1).write(row, i + 5, self.tesseract_module.run_tesseract_on_image(gaussian, file))
+                    wb.get_sheet(0).write(row, i + 5, self.tesseract_module.run_tesseract_on_image(gaussian, file))
 
                     if i == 0:
-                        wb.get_sheet(1).write(row, 0, "Grayscale")
-                        wb.get_sheet(1).write(row, 1, "Kernel: " + str(d_value))
-                        wb.get_sheet(1).write(row, 2, "Sigma color: " + str(sigma_color))
-                        wb.get_sheet(1).write(row, 3, "Sigma space: " + str(sigma_space))
+                        wb.get_sheet(0).write(row, 0, "Grayscale")
+                        wb.get_sheet(0).write(row, 1, "Kernel: " + str(d_value))
+                        wb.get_sheet(0).write(row, 2, "Sigma color: " + str(sigma_color))
+                        wb.get_sheet(0).write(row, 3, "Sigma space: " + str(sigma_space))
                     row += 1
                     sigma_space += 20
                 sigma_color += 20
