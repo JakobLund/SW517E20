@@ -103,7 +103,7 @@ class NitfParser:
                 p = Paragraph()
                 p.kind = "paragraph"
                 paragraph_kind = paragraph.getAttribute('class')
-                if paragraph_kind is not "":
+                if paragraph_kind != "":
                     p.kind = paragraph_kind
 
                 p.value = paragraph.firstChild.nodeValue

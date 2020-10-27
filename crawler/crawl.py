@@ -39,7 +39,27 @@ class Crawler:
         # loops through all the folders in the path and their respective files.
         for folder in folders:
             files = self.__find_relevant_files_in_directory(folder['path'])
-            self.thresh(files)
+            self.blur(files)
+            self.bilateral(files)
+            self.no_pre(files)
+            self.erode_dilation_osv(files)
+
+    def no_pre(self, files):
+        wb = Workbook()
+        nope = wb.add_sheet('NoPre')
+
+        sheets = [nope]
+
+        for sheet in sheets:
+            sheet.write(0, 0, "Methods")
+
+        i = 0
+        for file in files:
+            # checks if it is a .jp2 file. if true, the ocr is called
+            if ".jp2" in file:
+                wb = self.__testing_data_no_pre(wb, file, i)
+            i += 1
+        wb.save('noPre.xls')
 
     def thresh(self, files):
         wb = Workbook()
@@ -77,6 +97,43 @@ class Crawler:
                 wb = self.__testing_data_blur(wb, file, i)
             i += 1
         wb.save('blur_without_bilateral.xls')
+
+    def bilateral(self, files):
+        wb = Workbook()
+        bil = wb.add_sheet('Bilateral')
+
+        sheets = [bil]
+
+        for sheet in sheets:
+            sheet.write(0, 0, "Methods")
+
+        i = 0
+        for file in files:
+            # checks if it is a .jp2 file. if true, the ocr is called
+            if ".jp2" in file:
+                wb = self.__testing_data_bilateral_blur(wb, file, i)
+            i += 1
+        wb.save('bilateral.xls')
+
+    def erode_dilation_osv(self, files):
+        wb = Workbook()
+        erode = wb.add_sheet('Erode')
+        dilate = wb.add_sheet('Dilate')
+        opening = wb.add_sheet('Opening')
+        closing = wb.add_sheet('Closing')
+
+        sheets = [erode, dilate, opening, closing]
+
+        for sheet in sheets:
+            sheet.write(0, 0, "Methods")
+
+        i = 0
+        for file in files:
+            # checks if it is a .jp2 file. if true, the ocr is called
+            if ".jp2" in file:
+                wb = self.__testing_data_erosion_dilation_opening_closing(wb, file, i)
+            i += 1
+        wb.save('erode_dilate_osv.xls')
 
     def deskew(self, files):
         wb = Workbook()
@@ -242,6 +299,14 @@ class Crawler:
                 c += 1
                 col += 1
             value += 2
+        return wb
+
+    def __testing_data_no_pre(self, wb, file, i):
+        preprocesser = Preprocessing()
+
+        image = preprocesser.do_no_preprocessing(file)
+        wb.get_sheet(0).write(1, i + 3, self.tesseract_module.run_tesseract_on_image(image, file))
+
         return wb
 
     def __testing_data_v2(self, wb, file, i):
