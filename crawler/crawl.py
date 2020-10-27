@@ -39,7 +39,7 @@ class Crawler:
         # loops through all the folders in the path and their respective files.
         for folder in folders:
             files = self.__find_relevant_files_in_directory(folder['path'])
-            self.blur(files)
+            self.thresh(files)
 
     def thresh(self, files):
         wb = Workbook()
