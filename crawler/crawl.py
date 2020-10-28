@@ -39,9 +39,6 @@ class Crawler:
         # loops through all the folders in the path and their respective files.
         for folder in folders:
             files = self.__find_relevant_files_in_directory(folder['path'])
-            self.blur(files)
-            self.bilateral(files)
-            self.no_pre(files)
             self.erode_dilation_osv(files)
 
     def no_pre(self, files):
@@ -121,8 +118,12 @@ class Crawler:
         dilate = wb.add_sheet('Dilate')
         opening = wb.add_sheet('Opening')
         closing = wb.add_sheet('Closing')
+        erode_mean = wb.add_sheet('Erode_mean')
+        dilate_mean = wb.add_sheet('Dilate_mean')
+        opening_mean = wb.add_sheet('Opening_mean')
+        closing_mean = wb.add_sheet('Closing_mean')
 
-        sheets = [erode, dilate, opening, closing]
+        sheets = [erode, dilate, opening, closing, erode_mean, dilate_mean, opening_mean, closing_mean]
 
         for sheet in sheets:
             sheet.write(0, 0, "Methods")
