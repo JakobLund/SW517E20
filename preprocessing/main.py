@@ -234,6 +234,7 @@ class Preprocessing:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
+        image = self.__thresholding(image)
         image = cv2.medianBlur(image, kernel)
         image = self.__convert_to_pil(image)
 
@@ -246,6 +247,7 @@ class Preprocessing:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
+        image = self.__thresholding(image)
         image = cv2.GaussianBlur(image, (kernel, kernel), sigma)
         image = self.__convert_to_pil(image)
 
@@ -258,6 +260,7 @@ class Preprocessing:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
+        image = self.__thresholding(image)
         image = cv2.blur(image, (kernel, kernel))
         image = self.__convert_to_pil(image)
 
@@ -270,6 +273,7 @@ class Preprocessing:
             raise Exception("The image was not found in the path: " + image_path)
 
         image = self.__get_grayscale(imagecv2)
+        image = self.__thresholding(image)
         image = cv2.bilateralFilter(image, d, sigma_color, sigma_space)
         image = self.__convert_to_pil(image)
 

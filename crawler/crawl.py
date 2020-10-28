@@ -39,7 +39,8 @@ class Crawler:
         # loops through all the folders in the path and their respective files.
         for folder in folders:
             files = self.__find_relevant_files_in_directory(folder['path'])
-            self.erode_dilation_osv(files)
+            self.blur(files)
+            self.bilateral(files)
 
     def no_pre(self, files):
         wb = Workbook()
@@ -93,7 +94,7 @@ class Crawler:
             if ".jp2" in file:
                 wb = self.__testing_data_blur(wb, file, i)
             i += 1
-        wb.save('blur_without_bilateral.xls')
+        wb.save('blur_without_bilateral_with_thresh.xls')
 
     def bilateral(self, files):
         wb = Workbook()
