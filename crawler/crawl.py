@@ -15,6 +15,7 @@ from preprocessing.main import Preprocessing
 
 
 class Crawler:
+
     config = configparser.ConfigParser()
     config.read('config.ini')
     nitf_parser = NitfParser()
@@ -39,8 +40,24 @@ class Crawler:
         # loops through all the folders in the path and their respective files.
         for folder in folders:
             files = self.__find_relevant_files_in_directory(folder['path'])
-            self.blur(files)
-            self.bilateral(files)
+            self.bilateral_dilate(files)
+
+    def bilateral_dilate(self, files):
+        wb = Workbook()
+        bil = wb.add_sheet('Bilateral')
+
+        sheets = [bil]
+
+        for sheet in sheets:
+            sheet.write(0, 0, "Methods")
+
+        i = 0
+        for file in files:
+            # checks if it is a .jp2 file. if true, the ocr is called
+            if ".jp2" in file:
+                wb = self.__testing_data_bilateral_dilate(wb, file, i)
+            i += 1
+        wb.save('bilateral_no_thresh.xls')
 
     def no_pre(self, files):
         wb = Workbook()
@@ -178,6 +195,19 @@ class Crawler:
                     sigma_space += 20
                 sigma_color += 20
             d_value += 1
+        return wb
+
+    def __testing_data_bilateral_dilate(self, wb, file, i):
+        preprocesser = Preprocessing()
+
+        bilateral = preprocesser.do_preprocessing_bilateraldilate(file)
+        wb.get_sheet(0).write(1, i + 5, self.tesseract_module.run_tesseract_on_image(bilateral, file))
+
+        if i == 0:
+            wb.get_sheet(0).write(1, 0, "Kernel: " + str(1))
+            wb.get_sheet(0).write(1, 1, "Sigma color: " + str(1))
+            wb.get_sheet(0).write(1, 2, "Sigma space: " + str(41))
+            wb.get_sheet(0).write(1, 3, "kernel: " + str(3))
         return wb
 
     def __testing_data_blur(self, wb, file, i):
@@ -406,7 +436,11 @@ class Crawler:
         print("Searching in " + directory)
 
         #  finds all sub directories in the directory
-        dirs = next(os.walk(directory))[1]
+        print(directory)
+        walk = next(os.walk(directory), None)
+        if walk is None:
+            return []
+        dirs = walk[1]
 
         found_folders = []
 
@@ -448,7 +482,7 @@ class Crawler:
         handler = IOHandler(Generator(app="This app", version=1.0, generated_at=datetime.now().isoformat()),
                             "http://iptc.org/std/NITF/2006-10-18/")
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, 'output.json')
+        filename = os.path.join(dirname, 'outpuwddwsdw  wdsat.json')
 
         with open(filename, 'w') as outfile:
             handler.write_json(publication, outfile)

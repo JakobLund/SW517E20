@@ -279,13 +279,27 @@ class Preprocessing:
 
         return image
 
+    def do_preprocessing_bilateraldilate(self, image_path):
+        try:
+            imagecv2 = self.__load_file(image_path)
+        except FileNotFoundError:
+            raise Exception("The image was not found in the path: " + image_path)
+
+        image = self.__get_grayscale(imagecv2)
+        # image = self.__thresholding(image)
+        image = cv2.bilateralFilter(image, 1, 1, 41)
+        # image = cv2.dilate(image, (3, 3), 1)
+        image = self.__convert_to_pil(image)
+
+        return image
+
     @staticmethod
     def __get_grayscale(image):
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     @staticmethod
     def __remove_noise(image, c):
-        return cv2.medianBlur(image, c)
+        return cv2.medianBlur(image, c) #todo bilateral
 
     # thresholding
     @staticmethod
@@ -314,11 +328,6 @@ class Preprocessing:
     def __closing(image, kernel_value, iteration_value):
         kernel = np.ones((kernel_value, kernel_value), np.uint8)
         return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel, iterations=iteration_value)
-
-    # canny edge detection
-    @staticmethod
-    def __canny(image):
-        return cv2.Canny(image, 100, 200)
 
     # skew correction
     @staticmethod
