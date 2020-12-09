@@ -115,8 +115,9 @@ def run_file(file_path):
     our_headers = segment_helper.group_headers_into_segments(headers)
     segment_lines = SegmentLines(paragraphs, our_headers)
     (horizontal_lines, vertical_lines) = segment_lines.find_vertical_and_horizontal_lines()
-    LineExtractor.show_lines_on_image(cv2.imread(file_path, cv2.CV_8UC1), horizontal_lines, "-HelloThere")
-    LineExtractor.show_lines_on_image(cv2.imread(file_path, cv2.CV_8UC1), horizontal_lines + vertical_lines, "-HelloThereMedAlleLinjer")
+
+    # LineExtractor.show_lines_on_image(cv2.imread(file_path, cv2.CV_8UC1), horizontal_lines, "-HelloThere")
+    # LineExtractor.show_lines_on_image(cv2.imread(file_path, cv2.CV_8UC1), horizontal_lines + vertical_lines, "-HelloThereMedAlleLinjer")
 
 
     # Grouping
