@@ -2,7 +2,7 @@ import argparse
 import json
 import codecs
 
-from knox_source_data_io.io_handler import IOHandler, Generator
+from source_data_io.knox_source_data_io.io_handler import IOHandler, Generator
 
 from nitf_parser.parser import NitfParser
 

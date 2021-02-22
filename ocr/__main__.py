@@ -2,7 +2,7 @@ import argparse
 import codecs
 import os
 
-from knox_source_data_io.io_handler import IOHandler, Generator
+from source_data_io.knox_source_data_io.io_handler import IOHandler, Generator
 
 from crawler.file import File
 from crawler.file_types import FileType

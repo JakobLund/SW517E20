@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, timezone
 import pytesseract
-from knox_source_data_io.models.publication import Publication, Article, Paragraph
+from source_data_io.knox_source_data_io.models.publication import Publication, Article, Paragraph
 
 
 class TesseractModule:

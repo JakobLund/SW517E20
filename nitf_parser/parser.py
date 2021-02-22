@@ -1,6 +1,6 @@
 from xml.dom import minidom
 import configparser
-from knox_source_data_io.models.publication import Publication, Article, Paragraph
+from source_data_io.knox_source_data_io.models.publication import Publication, Article, Paragraph
 
 
 class NitfParser:

@@ -8,7 +8,7 @@ import re
 
 from alto_segment_lib.segment import SegmentType
 from crawler.file import File
-from knox_source_data_io.models.publication import Article
+from source_data_io.knox_source_data_io.models.publication import Article
 from alto_segment_lib.segment_module import SegmentModule
 from ocr.tesseract import TesseractModule
 environ["OPENCV_IO_ENABLE_JASPER"] = "true"
